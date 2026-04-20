@@ -5,6 +5,7 @@
  * 2. Mobile menu toggle
  * 3. Show success/error message after form submission
  *    (contact.php redirects back with ?sent=1 or ?sent=error)
+ * 4. Scroll animations via IntersectionObserver
  */
 
 (function () {
@@ -73,6 +74,57 @@
   } else if (sent === 'error') {
     showMessage('formError');
     history.replaceState(null, '', window.location.pathname + '#kontakt');
+  }
+
+  /* ── Scroll animations ────────────────────────────────────── */
+  // Add data-animate / data-animate-stagger to elements automatically
+  // so the HTML stays clean and easy to read.
+  var animateSingle = [
+    '.section__header',
+    '.about__visual',
+    '.about__content',
+    '.contact__intro',
+    '.contact__form-wrap',
+    '.contact__map',
+  ];
+
+  var animateStagger = [
+    '.services__grid',
+    '.expertise__grid',
+    '.process__steps',
+  ];
+
+  animateSingle.forEach(function (sel) {
+    document.querySelectorAll(sel).forEach(function (el) {
+      el.setAttribute('data-animate', '');
+    });
+  });
+
+  animateStagger.forEach(function (sel) {
+    document.querySelectorAll(sel).forEach(function (el) {
+      el.setAttribute('data-animate-stagger', '');
+    });
+  });
+
+  // Only run observer if reduced-motion is not preferred
+  if (window.matchMedia('(prefers-reduced-motion: no-preference)').matches) {
+    var scrollObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          scrollObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+
+    document.querySelectorAll('[data-animate], [data-animate-stagger]').forEach(function (el) {
+      scrollObserver.observe(el);
+    });
+  } else {
+    // Reduced motion: skip animation, show everything immediately
+    document.querySelectorAll('[data-animate], [data-animate-stagger]').forEach(function (el) {
+      el.classList.add('is-visible');
+    });
   }
 
 }());
