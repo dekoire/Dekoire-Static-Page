@@ -86,10 +86,48 @@ contact.php
   └── index.html      (Redirect nach Formular-Submit mit ?sent=1 oder ?sent=error)
 ```
 
-## Externe Abhängigkeiten
+## Abhängigkeiten
 
-| Dienst | Zweck | Erforderlich? |
+### Externe Dienste (CDN / Third-Party)
+
+| Dienst | URL | Zweck | Pflicht? | Fallback |
+|---|---|---|---|---|
+| Google Fonts | `fonts.googleapis.com` | Inter-Schrift (300–800) | Nein | `system-ui, -apple-system, sans-serif` aus `--font-sans` |
+| OpenStreetMap | `openstreetmap.org` | Karten-Embed im Kontaktbereich | Nein | iframe zeigt OSM-Fehlerseite, Rest der Seite unberührt |
+
+### Server / Hosting
+
+| Abhängigkeit | Version | Zweck | Pflicht? |
+|---|---|---|---|
+| PHP | >= 7.4 | Kontaktformular `contact.php` | Ja – ohne PHP kein Formular |
+| PHP `mail()` | – | E-Mails versenden | Ja – muss auf Hoster aktiviert sein |
+| Webserver | Apache / Nginx / LiteSpeed | HTML/CSS/JS ausliefern | Ja (Standard überall) |
+| SSL-Zertifikat | TLS 1.2+ | HTTPS für Formular | Empfohlen (Pflicht für Datenschutz) |
+
+### Browser-APIs (JavaScript)
+
+Kein Polyfill eingebaut. Alle APIs sind in allen modernen Browsern verfügbar (Chrome 80+, Firefox 75+, Safari 14+, Edge 80+).
+
+| API | Verwendet in | Fallback wenn nicht vorhanden |
 |---|---|---|
-| Google Fonts (fonts.googleapis.com) | Inter-Schrift laden | Nein – fällt auf System-Font zurück |
-| OpenStreetMap (openstreetmap.org) | Karten-Embed im Kontaktbereich | Nein – iframe zeigt Fehlermeldung offline |
-| PHP `mail()` | E-Mails versenden | Ja – Hoster muss mail() unterstützen |
+| `IntersectionObserver` | `script.js` – Scroll-Animationen | Animationen werden per `prefers-reduced-motion` oder Guard übersprungen |
+| `URLSearchParams` | `script.js` – Formular-Feedback lesen | Parameter werden nicht gelesen, Meldung erscheint nicht |
+| `history.replaceState` | `script.js` – URL nach Redirect bereinigen | URL bleibt mit `?sent=` Parameter (harmlos) |
+| `window.matchMedia` | `script.js` – `prefers-reduced-motion` prüfen | Animationen laufen immer (kein Schaden) |
+| `element.classList` | `script.js` – überall | IE11 nicht unterstützt (irrelevant 2025) |
+| CSS `backdrop-filter` | `style.css` – Nav-Blur-Effekt | Nav bleibt weiß ohne Blur (Safari braucht `-webkit-backdrop-filter`) |
+| CSS `aspect-ratio` | `style.css` – Bild-Container | Ältere Browser: Container kollabiert (kein Bild sichtbar) |
+| CSS `clamp()` | `style.css` – Responsive Typografie | Ältere Browser: Feste Fallback-Größe |
+
+### Keine Abhängigkeiten (bewusst weggelassen)
+
+| Was | Warum nicht |
+|---|---|
+| npm / Node.js | Kein Build-Step – Dateien direkt deployen |
+| Composer / PHP-Pakete | Nur `mail()` nötig, kein Mailer-Framework |
+| React / Vue / Framework | Plain HTML – kein Framework-Overhead |
+| jQuery | Nicht nötig – vanilla JS reicht |
+| Icon-Bibliothek | Icons sind inline SVG (Lucide) – keine externe Datei |
+| CSS-Präprozessor | Reines CSS mit Custom Properties |
+| Datenbank | Kontaktformular speichert nichts – nur E-Mail-Versand |
+| Cookies / LocalStorage | Nichts wird gespeichert – kein Banner nötig (Stand jetzt) |
